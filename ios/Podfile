@@ -17,4 +17,6 @@ target 'GleanTennessee' do
 	pod 'Firebase/Functions'
   pod 'Firebase/RemoteConfig'
 
+  pod 'RNVectorIcons', :path => '../node_modules/react-native-vector-icons'
+
 end
