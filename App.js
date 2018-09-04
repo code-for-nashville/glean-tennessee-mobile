@@ -54,6 +54,7 @@ import firebase from 'react-native-firebase';
 */
 
 import {LoginForm} from './src/screens/userLogin';
+import {SignupForm} from './src/screens/userSignup';
 import {GleanRequestForm} from './src/screens/gleanRequestForm'
 
 const styles = StyleSheet.create({
@@ -103,6 +104,8 @@ class GleanTNLogin extends Component {
     this.state = {
 			ready:false,
 			user: null,
+			userRecord:null,
+			curScreen: "login",
 			loadingFirebase: true,
 			tempFileKey: null,
 			internetConnection:true
@@ -120,24 +123,27 @@ class GleanTNLogin extends Component {
 
 	componentWillMount() {
 		StatusBar.setHidden(false);
+
     //AppState.addEventListener('change', this.handleAppStateChange);
 	}
 
 	 componentDidMount() {
 			 //this.setState({ user:user,loading:false});
 			 var _that = this;
-			 this.setupLoginHandler();
+			 //firebase.auth().signOut();
+			 this.setupUserStateHandler();
 	 }
 
    componentWillUnmount() {
-    AppState.removeEventListener('change', this.handleAppStateChange);
+  	AppState.removeEventListener('change', this.handleAppStateChange);
    }
 
-	 setupLoginHandler() {
+	 setupUserStateHandler() {
 		 /*NetInfo.getConnectionInfo().then((connectionInfo) => {
 			 if(connectionInfo.type !== "none")
 			 {*/
 				 // then try to use firebase auth
+				 var _that = this;
 				 this.unsubscriber = firebase.auth().onAuthStateChanged((user) => {
 					 var isError = true;
 					 if(user)
@@ -147,12 +153,22 @@ class GleanTNLogin extends Component {
 							 if(typeof user.uid === "string")
 							 {
 								 isError = false;
-							 	 this.setState({user:user,loadingFirebase:false});
+
+			 					const path = "users/"+user.uid;
+			 					const ref = firebase.database().ref(path);
+			 					ref.once("value")
+			   				.then(function(snapshot) {
+			 						_that.setState({user:user,loadingFirebase:false,userRecord:snapshot});
+			 					})
+			 					.catch((err) => {
+			 						console.warn(err);
+			 					})
 							 }
 						 }
 					 }
-					 else
-						this.setState({user:user,loadingFirebase:false});
+					 else {
+					 		_that.setState({user:user,loadingFirebase:false});
+					 }
 					 /*if(isError)
 					 	console.error("User data not found after login:",user);*/
 				 });
@@ -168,12 +184,23 @@ class GleanTNLogin extends Component {
 		)
 	}
 
-	_renderLogin() {
+	_renderLoginSignup() {
 		if(!this.state.user)
 		{
 			var _that = this;
 			function _handleUserLogin(userRecord) {
-				_that.setState({user:userRecord});
+				// show spinner
+			}
+			function _handleUserSignup(userRecord,extraInfo) {
+				if(typeof _that.state.user.uid !== "undefined") {
+					var newInfo = {accountType:"user", notification:{push:true}, locations:{default:{address:null,city:null,state:null,zip:null}}};
+					newInfo.fullName = extraInfo.fullName;
+					newInfo.phone = extraInfo.phone;
+					newInfo.locations.default = Object.assign(newInfo.locations.default,{address:extraInfo.address,city:extraInfo.city,state:extraInfo.state,zip:extraInfo.zip});
+					const path = "users/"+_that.state.user.uid;
+					firebase.database().ref(path).set(newInfo);
+					_that.setState({userRecord:newInfo});
+				}
 				// show spinner
 			}
 
@@ -183,15 +210,40 @@ class GleanTNLogin extends Component {
 			}
 			else
 			{
-				return (
-						<LoginForm
-							successCallback={_handleUserLogin}
-						/>
-				);
+				if(this.state.curScreen === "login") {
+					return (
+							<LoginForm
+								onSuccess={_handleUserLogin}
+								onSignupPress={(e) => {this.setState({curScreen:"signup"})}}
+							/>
+					);
+				}
+				else if(this.state.curScreen === "signup") {
+					return (
+							<SignupForm
+								onSuccess={_handleUserSignup}
+								onLoginPress={(e) => {this.setState({curScreen:"signup"})}}
+							/>
+					);
+				}
 			}
 		}
 	}
 
+	userRequestAdd(reqInfo) {
+		var _that = this;
+		var reqRef = firebase.database().ref("openRequests");
+		reqRef.push().set({
+			email: _that.state.userRecord.email,
+			name: _that.state.userRecord.fullName,
+		  locationDescription: reqInfo.location,
+		  description: reqInfo.items,
+			timestamp: 1000*(Date.now()/1000)
+		});
+		var newVal = {};
+		newVal[reqRef.key] = true;
+		var ref = firebase.database().ref("users/"+this.state.user.uid+"/openRequests").set(newVal);
+	}
 
 	_renderUserHome() {
 		var _that = this;
@@ -206,9 +258,14 @@ class GleanTNLogin extends Component {
 			});
 		}
 
-		return (
-			<GleanRequestForm />
-		);
+		if(this.state.userRecord) {
+			return (
+				<GleanRequestForm userRecord={this.state.userRecord} onSendRequest={(reqInfo) => {this.userRequestAdd(reqInfo)}} />
+			);
+		}
+		else {
+			return (<Text>There was an error loading information. Please contact the Society for St. Andrew.</Text>);
+		}
 	}
 
 	_renderLogo() {
@@ -225,7 +282,7 @@ class GleanTNLogin extends Component {
 			return(
 				<View style={[styles.userLoginContainer]}>
 					{this._renderLogo()}
-					{this._renderLogin()}
+					{this._renderLoginSignup()}
 					{this._renderBottomContent()}
 				</View>
 			);

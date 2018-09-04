@@ -36,26 +36,29 @@ import firebase from 'react-native-firebase';
 //import TitledInput from './TitledInput';
 //import Spinner from './Spinner';
 
-export class LoginForm extends PureComponent {
+export class SignupForm extends PureComponent {
 		constructor(props) {
 			super(props);
 
-	    this.state = { user:null, email: '', password: '', error: '', loading: false };
+	    this.state = {user:null, fullName: '', email: '', password: '', phone: '', address: '', city: '', state: 'TN', zip: '', error: '', loading: false };
+			this.onSignupPress = this.onSignupPress.bind(this);
 		}
-    onLoginPress() {
+    onSignupPress() {
         this.setState({ error: '', loading: true });
 
         const { email, password } = this.state;
-        firebase.auth().signInAndRetrieveDataWithEmailAndPassword(email, password)
-        .then((user) => {
-					this.setState({ error: ''});
-	 				 if(typeof this.props.onSuccess === "function"){
-	 					 this.props.onSuccess(user);
-	 				 }
-				})
-        .catch(() => {
-          this.setState({ error: 'Login failed.'});
-        });
+				var _that = this;
+        firebase.auth().createUserAndRetrieveDataWithEmailAndPassword(email, password)
+          .then((user) => {
+						//_that.setState({ error: '', loading: false });
+		 				 if(typeof _that.props.onSuccess === "function"){
+		 					 _that.props.onSuccess(user,{fullName:_that.state.fullName,phone:_that.state.phone,address:_that.state.address,city:_that.state.city,state:_that.state.state,zip:_that.state.zip});
+		 				 }
+					})
+          .catch((err) => {
+						console.error(err);
+            //_that.setState({ error: 'Signup failed.', loading: false });
+          });
     }
     renderButtonOrSpinner() {
         if (this.state.loading) {
@@ -65,7 +68,7 @@ export class LoginForm extends PureComponent {
 					large
 					buttonStyle={styles.buttonStandard}
 					textStyle={{color:"#3a6db5"}}
-					onPress={this.onLoginPress.bind(this)} title="Log in"
+					onPress={this.onSignupPress.bind(this)} title="Submit"
 					/>
 				);
     }
@@ -77,6 +80,16 @@ export class LoginForm extends PureComponent {
 			        justifyContent: 'center',
 			        alignItems: 'center',
 			      }}>
+								<Text>Let's Register</Text>
+								<Text>This is the information SoSA will use to get in touch with you.</Text>
+                <TextInput
+										style={styles.whiteTextBtn}
+										placeholderTextColor="#a0a0a0"
+										selectionColor="#c0c0c0"
+                    placeholder='First Last'
+                    value={this.state.fullName}
+                    onChangeText={fullName => this.setState({ fullName })}
+                />
                 <TextInput
 										style={styles.whiteTextBtn}
 										placeholderTextColor="#a0a0a0"
@@ -94,14 +107,52 @@ export class LoginForm extends PureComponent {
                     value={this.state.password}
                     onChangeText={password => this.setState({ password })}
                 />
+                <TextInput
+										style={styles.whiteTextBtn}
+										placeholderTextColor="#a0a0a0"
+										selectionColor="#c0c0c0"
+                    placeholder='555-555-1212'
+                    value={this.state.phone}
+                    onChangeText={phone => this.setState({ phone })}
+                />
+                <TextInput
+										style={styles.whiteTextBtn}
+										placeholderTextColor="#a0a0a0"
+										selectionColor="#c0c0c0"
+                    placeholder='123 MyStreet St.'
+                    value={this.state.address}
+                    onChangeText={address => this.setState({ address })}
+                />
+                <TextInput
+										style={styles.whiteTextBtn}
+										placeholderTextColor="#a0a0a0"
+										selectionColor="#c0c0c0"
+                    placeholder='Hendersonville'
+                    value={this.state.city}
+                    onChangeText={city => this.setState({ city })}
+                />
+                <TextInput
+										style={styles.whiteTextBtn}
+										placeholderTextColor="#a0a0a0"
+										selectionColor="#c0c0c0"
+                    placeholder='TN'
+                    value={this.state.state}
+                    onChangeText={state => this.setState({ state })}
+                />
+                <TextInput
+										style={styles.whiteTextBtn}
+										placeholderTextColor="#a0a0a0"
+										selectionColor="#c0c0c0"
+                    placeholder='76201'
+                    value={this.state.zip}
+                    onChangeText={zip => this.setState({ zip })}
+                />
                 <Text style={styles.errorTextStyle}>{this.state.error}</Text>
                 {this.renderButtonOrSpinner()}
-								<Text className="sign-up-offer">First time with the app?</Text>
-								<Text className="fakelink" onPress={() => {this.props.onSignupPress()}}>Sign Up</Text>
-								<Text>Thank you for donating to the Society of St. Andrew!</Text>
-								<Text>Our volunteers will arrive to glean your produce, and we will deliver the food to food banks, churches, pantries,
-									and other agencies at no cost to you.</Text>
-								<Text>Because of your contribution, hungry people will get fresh, nutritious food.</Text>
+								<Text className="sign-up-offer">Login instead?</Text>
+								<Text className="fakelink" onPress={() => {this.props.onLoginPress()}}>
+								  Log In
+								</Text>
             </View>
         );
     }

@@ -30,6 +30,7 @@
  import React, { Component } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 import {Button,FormLabel,FormInput} from 'react-native-elements';
+import firebase from 'react-native-firebase';
 //import TitledInput from './TitledInput';
 //import Spinner from './Spinner';
 
@@ -37,7 +38,7 @@ const sgAPIKey = "<<INSERT YOUR API KEY HERE>>";
 
 function _getEmailContent(params) {
 	// some kind of input cleaning probably needed here
-	return "<p><b>Request from:<b><br/> \
+	return "<p><b>Request from: "+params.name+"<b><br/> \
 		<b>Items</b>: "+(params.items||"not specified")+"<br/>\
 		<b>Location</b>: "+(params.location||"not specified");
 }
@@ -53,13 +54,17 @@ function _onSendRequest() {
       subject: "__=GLEANINING REQUEST=__"
     }],
 	  from: {
-	    email: "farmer@farm.com"
+	    email: this.props.userRecord.email
 	  },
 	  content: [{
       type: "text/html",
-     	value: _getEmailContent({items:this.state.itemsText,location:this.state.locationText})
+     	value: _getEmailContent({name:this.props.userRecord.fullName,items:this.state.itemsText,location:this.state.locationText})
     }]
 	};
+
+	if(typeof this.props.onSendRequest === "function") {
+		this.props.onSendRequest({description: this.state.itemsText,location:this.state.locationText});
+	}
 
 	var _that = this;
 	fetch('https://api.sendgrid.com/v3/mail/send', {
@@ -71,6 +76,7 @@ function _onSendRequest() {
 	  body: JSON.stringify(msgBody),
 	}).then((response) => {
 	  _that.setState({sgResponse: JSON.stringify(response),isSending:false});
+
 	});
 }
 
@@ -137,6 +143,7 @@ export class GleanRequestForm extends Component {
 		_renderSendForm() {
 			return (
 				<View style={styles.centeredForm}>
+					<Text>Welcome, {this.props.userRecord.fullName}</Text>
 					<FormLabel>Items</FormLabel>
 					<FormInput
 							style={styles.textEntry}
