@@ -30,7 +30,7 @@
  */
 
 import React, { PureComponent } from 'react';
-import { View, Text, TextInput} from 'react-native';
+import { View, Text, TextInput, Checkbox} from 'react-native';
 import { Button } from 'react-native-elements';
 import firebase from 'react-native-firebase';
 //import TitledInput from './TitledInput';
@@ -40,26 +40,42 @@ export class SignupForm extends PureComponent {
 		constructor(props) {
 			super(props);
 
-	    this.state = {user:null, fullName: '', email: '', password: '', phone: '', address: '', city: '', state: 'TN', zip: '', error: '', loading: false };
-			this.onSignupPress = this.onSignupPress.bind(this);
+	    this.state = {
+				userInfo: {
+					fullName: '',
+					email: '',
+					password: '',
+					phone: '',
+					address: '',
+					city: '',
+					state: 'TN',
+					zip: '',
+					organicProduce:false
+				},
+				error: '',
+				loading: false
+			};
 		}
-    onSignupPress() {
-        this.setState({ error: '', loading: true });
+    onSignupPress = () => {
+      this.setState({ error: '', loading: true });
 
-        const { email, password } = this.state;
-				var _that = this;
-        firebase.auth().createUserAndRetrieveDataWithEmailAndPassword(email, password)
-          .then((user) => {
-						//_that.setState({ error: '', loading: false });
-		 				 if(typeof _that.props.onSuccess === "function"){
-		 					 _that.props.onSuccess(user,{fullName:_that.state.fullName,phone:_that.state.phone,address:_that.state.address,city:_that.state.city,state:_that.state.state,zip:_that.state.zip});
-		 				 }
-					})
-          .catch((err) => {
-						console.error(err);
-            //_that.setState({ error: 'Signup failed.', loading: false });
-          });
+      const { email, password } = this.state.userInfo;
+			var _that = this;
+      firebase.auth().createUserAndRetrieveDataWithEmailAndPassword(email, password)
+        .then((user) => {
+					//_that.setState({ error: '', loading: false });
+	 				 if(typeof _that.props.onSuccess === "function"){
+	 					 _that.props.onSuccess(user,_that.state.userInfo);
+	 				 }
+				})
+        .catch((err) => {
+					console.error(err);
+          //_that.setState({ error: 'Signup failed.', loading: false });
+        });
     }
+		setUserInfo = (newProperty) => {
+			this.setState(userInfo:{...this.state.userInfo,...newProperty})
+		}
     renderButtonOrSpinner() {
         if (this.state.loading) {
             return ;//<Spinner />;
@@ -80,23 +96,24 @@ export class SignupForm extends PureComponent {
 			        justifyContent: 'center',
 			        alignItems: 'center',
 			      }}>
-								<Text>Let's Register</Text>
-								<Text>This is the information SoSA will use to get in touch with you.</Text>
+								<Text>Register</Text>
+								<Text>This is the information SoSA will use to get in touch with
+								you and coordinate pickup.</Text>
                 <TextInput
 										style={styles.whiteTextBtn}
 										placeholderTextColor="#a0a0a0"
 										selectionColor="#c0c0c0"
                     placeholder='First Last'
-                    value={this.state.fullName}
-                    onChangeText={fullName => this.setState({ fullName })}
+                    value={this.state.userInfo.fullName}
+                    onChangeText={fullName => this.setUserInfo({ fullName })}
                 />
                 <TextInput
 										style={styles.whiteTextBtn}
 										placeholderTextColor="#a0a0a0"
 										selectionColor="#c0c0c0"
                     placeholder='you@email.com'
-                    value={this.state.email}
-                    onChangeText={email => this.setState({ email })}
+                    value={this.state.userInfo.email}
+                    onChangeText={email => this.setUserInfo({ email })}
                 />
                 <TextInput
 										style={styles.whiteTextBtn}
@@ -104,49 +121,53 @@ export class SignupForm extends PureComponent {
 										selectionColor="#c0c0c0"
                     placeholder='password'
                     secureTextEntry
-                    value={this.state.password}
-                    onChangeText={password => this.setState({ password })}
+                    value={this.state.userInfo.password}
+                    onChangeText={password => this.setUserInfo({ password })}
                 />
                 <TextInput
 										style={styles.whiteTextBtn}
 										placeholderTextColor="#a0a0a0"
 										selectionColor="#c0c0c0"
                     placeholder='555-555-1212'
-                    value={this.state.phone}
-                    onChangeText={phone => this.setState({ phone })}
+                    value={this.state.userInfo.phone}
+                    onChangeText={phone => this.setUserInfo({ phone })}
                 />
                 <TextInput
 										style={styles.whiteTextBtn}
 										placeholderTextColor="#a0a0a0"
 										selectionColor="#c0c0c0"
                     placeholder='123 MyStreet St.'
-                    value={this.state.address}
-                    onChangeText={address => this.setState({ address })}
+                    value={this.state.userInfo.address}
+                    onChangeText={address => this.setUserInfo({ address })}
                 />
                 <TextInput
 										style={styles.whiteTextBtn}
 										placeholderTextColor="#a0a0a0"
 										selectionColor="#c0c0c0"
                     placeholder='Hendersonville'
-                    value={this.state.city}
-                    onChangeText={city => this.setState({ city })}
+                    value={this.state.userInfo.city}
+                    onChangeText={city => this.setUserInfo({ city })}
                 />
                 <TextInput
 										style={styles.whiteTextBtn}
 										placeholderTextColor="#a0a0a0"
 										selectionColor="#c0c0c0"
                     placeholder='TN'
-                    value={this.state.state}
-                    onChangeText={state => this.setState({ state })}
+                    value={this.state.userInfo.state}
+                    onChangeText={state => this.setUserInfo({ state })}
                 />
                 <TextInput
 										style={styles.whiteTextBtn}
 										placeholderTextColor="#a0a0a0"
 										selectionColor="#c0c0c0"
                     placeholder='76201'
-                    value={this.state.zip}
-                    onChangeText={zip => this.setState({ zip })}
+                    value={this.state.userInfo.zip}
+                    onChangeText={zip => this.setUserInfo({ zip })}
                 />
+								<Checkbox
+									style={}
+									value={this.state.userInfo.organicProduce}
+								/>
                 <Text style={styles.errorTextStyle}>{this.state.error}</Text>
                 {this.renderButtonOrSpinner()}
 								<Text className="sign-up-offer">Login instead?</Text>

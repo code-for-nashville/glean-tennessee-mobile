@@ -27,7 +27,7 @@
   SOFTWARE.
  *</p>
  */
- import React, { Component } from 'react';
+import React, { Component } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 import {Button,FormLabel,FormInput} from 'react-native-elements';
 import firebase from 'react-native-firebase';
@@ -80,13 +80,6 @@ function _onSendRequest() {
 	});
 }
 
-function  _setItemsText(text) {
-	this.setState({itemsText:text});
-}
-function _setLocationText(text) {
-	this.setState({locationText:text});
-}
-
 const styles = {
 		buttonStandard: {
 			marginTop: 30,
@@ -115,10 +108,15 @@ const styles = {
 export class GleanRequestForm extends Component {
 		constructor(props) {
 			super(props);
-			this.state = {itemsText:"",isSending:false,sgResponse:null};
+			this.state = {
+				messageInfo: {
+					itemsText:"",
+					locationText:""
+				},
+				isSending:false,
+				sgResponse:null
+			};
 			_onSendRequest = _onSendRequest.bind(this);
-			_setItemsText = _setItemsText.bind(this);
-			_setLocationText = _setLocationText.bind(this);
 		}
 
     /*renderButtonOrSpinner() {
@@ -126,6 +124,9 @@ export class GleanRequestForm extends Component {
             return ;//<Spinner />;
         }
     }*/
+		setMessageInfo = (newProperty) => {
+			this.setState(messageInfo:{...this.state.messageInfo,...newProperty})
+		}
 		_renderResultView() {
 			<View style={styles.centeredForm}>
 				<Text>Sendgrid result</Text>
@@ -151,7 +152,7 @@ export class GleanRequestForm extends Component {
 							multiline = {true}
 							numberOfLines = {4}
 							value={this.state.itemsText}
-							onChangeText={_setItemsText} />
+							onChangeText={itemsText => {this.setMessageInfo({itemsText})}} />
 					<FormLabel>Location</FormLabel>
 					<FormInput
 							style={styles.textEntry}
@@ -159,7 +160,7 @@ export class GleanRequestForm extends Component {
 							multiline = {true}
 							numberOfLines = {2}
 							value={this.state.locationText}
-							onChangeText={_setLocationText}/>
+							onChangeText={locationText => {this.setMessageInfo({locationText})}}/>
 						<Button
 							large
 							buttonStyle={styles.buttonStandard}

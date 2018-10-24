@@ -40,12 +40,18 @@ export class LoginForm extends PureComponent {
 		constructor(props) {
 			super(props);
 
-	    this.state = { user:null, email: '', password: '', error: '', loading: false };
+	    this.state = { userInfo: {
+					email: '',
+					password: ''
+				},
+				error: '',
+				loading: false
+			};
 		}
-    onLoginPress() {
+    onLoginPress = () => {
         this.setState({ error: '', loading: true });
 
-        const { email, password } = this.state;
+        const { email, password } = this.state.userInfo;
         firebase.auth().signInAndRetrieveDataWithEmailAndPassword(email, password)
         .then((user) => {
 					this.setState({ error: ''});
@@ -65,10 +71,13 @@ export class LoginForm extends PureComponent {
 					large
 					buttonStyle={styles.buttonStandard}
 					textStyle={{color:"#3a6db5"}}
-					onPress={this.onLoginPress.bind(this)} title="Log in"
+					onPress={this.onLoginPress} title="Log in"
 					/>
 				);
     }
+		setUserInfo = (newProperty) => {
+			this.setState(userInfo:{...this.state.userInfo,...newProperty})
+		}
     render() {
         return (
             <View style={{
@@ -83,7 +92,7 @@ export class LoginForm extends PureComponent {
 										selectionColor="#c0c0c0"
                     placeholder='you@email.com'
                     value={this.state.email}
-                    onChangeText={email => this.setState({ email })}
+                    onChangeText={email => this.setUserInfo({ email })}
                 />
                 <TextInput
 										style={styles.whiteTextBtn}
@@ -92,7 +101,7 @@ export class LoginForm extends PureComponent {
                     placeholder='password'
                     secureTextEntry
                     value={this.state.password}
-                    onChangeText={password => this.setState({ password })}
+                    onChangeText={password => this.setUserInfo({ password })}
                 />
                 <Text style={styles.errorTextStyle}>{this.state.error}</Text>
                 {this.renderButtonOrSpinner()}

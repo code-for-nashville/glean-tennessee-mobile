@@ -93,8 +93,6 @@ const styles = StyleSheet.create({
 });
 
 //https://medium.com/differential/react-native-basics-how-to-use-the-listview-component-a0ec44cf1fe8
-var fileList= [];
-var numStudies = 0;
 
 
 class GleanTNLogin extends Component {
@@ -154,9 +152,7 @@ class GleanTNLogin extends Component {
 							 {
 								 isError = false;
 
-			 					const path = "users/"+user.uid;
-			 					const ref = firebase.database().ref(path);
-			 					ref.once("value")
+			 					firebase.database().ref("users/"+user.uid).once("value")
 			   				.then(function(snapshot) {
 			 						_that.setState({user:user,loadingFirebase:false,userRecord:snapshot});
 			 					})
@@ -193,12 +189,20 @@ class GleanTNLogin extends Component {
 			}
 			function _handleUserSignup(userRecord,extraInfo) {
 				if(typeof _that.state.user.uid !== "undefined") {
-					var newInfo = {accountType:"user", notification:{push:true}, locations:{default:{address:null,city:null,state:null,zip:null}}};
-					newInfo.fullName = extraInfo.fullName;
-					newInfo.phone = extraInfo.phone;
-					newInfo.locations.default = Object.assign(newInfo.locations.default,{address:extraInfo.address,city:extraInfo.city,state:extraInfo.state,zip:extraInfo.zip});
-					const path = "users/"+_that.state.user.uid;
-					firebase.database().ref(path).set(newInfo);
+					var newInfo = {accountType:"user",
+						fullName: extraInfo.fullName,
+						phone: extraInfo.phone,
+						notification:{push:true},
+						locations:{
+							default:{
+								address:extraInfo.address,
+								city:extraInfo.city,
+								state:extraInfo.state,
+								zip:extraInfo.zip
+							}
+						}
+					};
+					firebase.database().ref("users/"+_that.state.user.uid).set(newInfo);
 					_that.setState({userRecord:newInfo});
 				}
 				// show spinner
@@ -242,7 +246,7 @@ class GleanTNLogin extends Component {
 		});
 		var newVal = {};
 		newVal[reqRef.key] = true;
-		var ref = firebase.database().ref("users/"+this.state.user.uid+"/openRequests").set(newVal);
+		firebase.database().ref("users/"+this.state.user.uid+"/openRequests").set(newVal);
 	}
 
 	_renderUserHome() {
